@@ -1,4 +1,4 @@
-task compute_rc_r;
+task updateRow;
     input [43:0] vals;
     input en;
     output [43:0] vals_out;
@@ -30,12 +30,14 @@ task compute_rc_r;
             // Shift for zero values.
             if (vals_in1[(i*11+10) -: 11] == 0) begin
                 if (vals_in1[((i-1)*11+10) -: 11] == 0) begin
-                    if (vals_in1[((i-2)*11+10) -: 11] == 0) begin                                  vals_in2[(i*11+10) -: 11] = vals_in1[((i-3)*11+10) -: 11];
+                    if (vals_in1[((i-2)*11+10) -: 11] == 0) begin                                  // 000x Case
+                        vals_in2[(i*11+10) -: 11] = vals_in1[((i-3)*11+10) -: 11];
                         vals_in2[((i-1)*11+10) -: 11] = 0;
                         vals_in2[((i-2)*11+10) -: 11] = 0;
                         vals_in2[((i-3)*11+10) -: 11] = 0;
                     end
                     else begin
+                        // 00xx Case
                         vals_in2[(i*11+10) -: 11] = vals_in1[((i-2)*11+10) -: 11];
                         vals_in2[((i-1)*11+10) -: 11] = vals_in1[((i-3)*11+10) -: 11];
                         vals_in2[((i-2)*11+10) -: 11] = 0;
@@ -44,19 +46,47 @@ task compute_rc_r;
 
                 end
                 else begin
-                  // One leading zero
-                  vals_in2[(i*11+10) -: 11] = vals_in1[((i-1)*11+10) -: 11];
-                  vals_in2[((i-1)*11+10) -: 11] = vals_in1[((i-2)*11+10) -: 11];
-                  vals_in2[((i-2)*11+10) -: 11] = vals_in1[((i-3)*11+10) -: 11];
-                  vals_in2[((i-3)*11+10) -: 11] = 0;
+                    if (vals_in1[((i-2)*11+10) -: 11] == 0) begin
+                        // 0x0x Case
+                        vals_in2[(i*11+10) -: 11] = vals_in1[((i-1)*11+10) -: 11];
+                        vals_in2[((i-1)*11+10) -: 11] = vals_in1[((i-3)*11+10) -: 11];
+                        vals_in2[((i-2)*11+10) -: 11] = 0;
+                        vals_in2[((i-3)*11+10) -: 11] = 0;
+                    end
+                    else begin
+                        // 0xxx Case
+                        vals_in2[(i*11+10) -: 11] = vals_in1[((i-1)*11+10) -: 11];
+                        vals_in2[((i-1)*11+10) -: 11] = vals_in1[((i-2)*11+10) -: 11];
+                        vals_in2[((i-2)*11+10) -: 11] = vals_in1[((i-3)*11+10) -: 11];
+                        vals_in2[((i-3)*11+10) -: 11] = 0;
+                    end
                 end
             end
             else begin
-                // No zero in the first position
-                vals_in2[(i*11+10) -: 11] = vals_in1[((i)*11+10) -: 11];
-                vals_in2[((i-1)*11+10) -: 11] = vals_in1[((i-1)*11+10) -: 11];
-                vals_in2[((i-2)*11+10) -: 11] = vals_in1[((i-2)*11+10) -: 11];
-                vals_in2[((i-3)*11+10) -: 11] = vals_in1[((i-3)*11+10) -: 11];
+                if (vals_in1[((i-1)*11+10) -: 11] == 0) begin
+                    if (vals_in1[((i-2)*11+10) -: 11] == 0) begin
+                        // x00x Case
+                        vals_in2[(i*11+10) -: 11] = vals_in1[(i*11+10) -: 11];
+                        vals_in2[((i-1)*11+10) -: 11] = vals_in1[((i-3)*11+10) -: 11];
+                        vals_in2[((i-2)*11+10) -: 11] = 0;
+                        vals_in2[((i-3)*11+10) -: 11] = 0;
+                    end
+                    else begin
+                        // x0xx Case
+                        vals_in2[(i*11+10) -: 11] = vals_in1[(i*11+10) -: 11];
+                        vals_in2[((i-1)*11+10) -: 11] = vals_in1[((i-2)*11+10) -: 11];
+                        vals_in2[((i-2)*11+10) -: 11] = vals_in1[((i-3)*11+10) -: 11];
+                        vals_in2[((i-3)*11+10) -: 11] = 0;
+                        $display("vals_in2: %b", vals_in2);
+                    end
+                end
+                else begin
+                    // xxxx Case
+                    vals_in2[(i*11+10) -: 11] = vals_in1[((i)*11+10) -: 11];
+                    vals_in2[((i-1)*11+10) -: 11] = vals_in1[((i-1)*11+10) -: 11];
+                    vals_in2[((i-2)*11+10) -: 11] = vals_in1[((i-2)*11+10) -: 11];
+                    vals_in2[((i-3)*11+10) -: 11] = vals_in1[((i-3)*11+10) -: 11];
+                end
             end
 
             // Combine if values are the same.
@@ -74,8 +104,8 @@ task compute_rc_r;
             end
 
 
+            ////////////// Second iteration ////////////////
 
-            // Second iteration
 
             // Shift for zero values.
             if (vals_in3[(j*11+10) -: 11] == 0) begin
@@ -93,11 +123,21 @@ task compute_rc_r;
                 end
             end
             else begin
-                // No zero in the first position
-                vals_in5[(i*11+10) -: 11] = vals_in3[(i*11+10) -: 11];
-                vals_in4[(j*11+10) -: 11] = vals_in3[((j)*11+10) -: 11];
-                vals_in4[((j-1)*11+10) -: 11] = vals_in3[((j-1)*11+10) -: 11];
-                vals_in4[((j-2)*11+10) -: 11] = vals_in3[((j-2)*11+10) -: 11];
+                if (vals_in3[((j-1)*11+10) -: 11] == 0) begin
+                    vals_in5[(i*11+10) -: 11] = vals_in3[(i*11+10) -: 11];
+                    vals_in4[(j*11+10) -: 11] = vals_in3[(j*11+10) -: 11];
+                    vals_in4[((j-1)*11+10) -: 11] = vals_in3[((j-2)*11+10) -: 11];;
+                    vals_in4[((j-2)*11+10) -: 11] = 0;
+                    $display("vals_in4: %b", vals_in4);
+                end
+                else begin
+                    // No zero in the first position
+                    vals_in5[(j*11+10) -: 11] = vals_in3[(i*11+10) -: 11];
+                    vals_in4[(j*11+10) -: 11] = vals_in3[((j)*11+10) -: 11];
+                    vals_in4[((j-1)*11+10) -: 11] = vals_in3[((j-1)*11+10) -: 11];
+                    vals_in4[((j-2)*11+10) -: 11] = vals_in3[((j-2)*11+10) -: 11];
+                    $display("vals_in4: %b", vals_in4);
+                end
             end
 
             // Combine if values are the same.
@@ -113,7 +153,7 @@ task compute_rc_r;
                 vals_in5[((j-2)*11+10) -: 11] = vals_in4[((j-2)*11+10) -: 11];
             end
 
-            // Third iteration
+            ////////////// Third iteration ////////////////
 
             // Shift for zero values.
             if (vals_in5[(k*11+10) -: 11] == 0) begin
