@@ -28,9 +28,9 @@ module row_tb; reg [10:0] a_in; reg [10:0] b_in; reg [10:0] c_in; reg [10:0] d_i
 
 initial begin
     // Initialize Inputs
-    a_in = 2;
-    b_in = 2;
-    c_in = 4;
+    a_in = 0;
+    b_in = 0;
+    c_in = 8;
     d_in = 8;
     #100
     $display("a = %d",a_out);
